@@ -27,3 +27,7 @@ dist-ssr
 # Music files (too large for git)
 public/Music/
 *.mp3
+
+# Local build output & Codely CLI config
+dist-deploy/
+.codely-cli/
