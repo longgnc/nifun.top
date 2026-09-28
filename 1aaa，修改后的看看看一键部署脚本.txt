@@ -1,0 +1,20 @@
+#!/bin/bash
+set -e
+
+echo "▶ 进入项目目录"
+cd /workers/nifun.top
+
+echo "▶ 清理旧 build"
+rm -rf dist node_modules/.vite
+
+echo "▶ 构建项目"
+npm run build
+
+echo "▶ 同步到生产目录"
+rm -rf /home/fun/nifunWeb/dist
+cp -r dist /home/fun/nifunWeb/
+
+echo "▶ 重启 nginx 容器"
+docker restart nifun-web
+
+echo "✅ 部署完成"

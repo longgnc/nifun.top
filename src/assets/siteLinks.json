@@ -1,0 +1,57 @@
+[
+  {
+    "icon": "Blog",
+    "name": "论坛",
+    "link": "#"
+  },
+  {
+    "icon": "Cloud",
+    "name": "网盘",
+    "link": "http://nifun.top:2096/"
+  },
+  {
+    "icon": "CompactDisc",
+    "name": "音乐",
+    "link": "#"
+  },
+  {
+    "icon": "Compass",
+    "name": "起始页",
+    "link": "#"
+  },
+  {
+    "icon": "Book",
+    "name": "网址集",
+    "link": "#"
+  },
+  {
+    "icon": "Fire",
+    "name": "游戏",
+    "link": "#"
+  },
+  {
+    "icon": "Tools",
+    "name": "工具",
+    "link": "#"
+  },
+  {
+    "icon": "Film",
+    "name": "影视",
+    "link": "#"
+  },
+  {
+    "icon": "BookOpen",
+    "name": "阅读",
+    "link": "#"
+  },
+  {
+    "icon": "LaptopCode",
+    "name": "站点监测",
+    "link": "https://test-ipv6.com/"
+  },
+  {
+    "icon": "Clock",
+    "name": "专注",
+    "link": "#"
+  }
+]
