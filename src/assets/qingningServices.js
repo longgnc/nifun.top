@@ -1,0 +1,51 @@
+// Public service destinations verified against the server deployment on 2026-09-30.
+export default [
+  {
+    id: "workbench",
+    name: "青柠工作台",
+    category: "工作与交流",
+    icon: "terminal",
+    description: "项目、知识与工作记录，也连接动态、好友和聊天。",
+    url: "http://nifun.top:32016/",
+  },
+  {
+    id: "drive",
+    name: "青柠云盘",
+    category: "文件存储",
+    icon: "compass",
+    description: "集中保存文件，在不同设备上访问和管理资料。",
+    url: "https://pan.nifun.top/",
+  },
+  {
+    id: "send",
+    name: "青柠快传",
+    category: "链接传输",
+    icon: "external",
+    description: "通过链接发起点对点文件传输，把文件交给对方。",
+    url: "https://send.nifun.top/",
+  },
+  {
+    id: "p2p",
+    name: "青柠设备互传",
+    category: "跨设备传输",
+    icon: "refresh",
+    description: "在电脑与手机之间互传文件，无需安装客户端。",
+    url: "https://p2p.nifun.top/",
+  },
+  {
+    id: "memos",
+    name: "青柠备忘",
+    category: "记录与整理",
+    icon: "book",
+    description: "记录想法、备忘与日常片段，集中整理零散信息。",
+    url: "http://nifun.top:5230/",
+  },
+  {
+    id: "video",
+    name: "青柠视频",
+    category: "影音空间",
+    icon: "film",
+    description: "打开独立的视频站，浏览和观看站内视频。",
+    url: "https://video.nifun.top/",
+  },
+];

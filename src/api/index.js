@@ -9,9 +9,11 @@ import fetchJsonp from "fetch-jsonp";
 export const getPlayerList = async (server, type, id) => {
   const res = await fetch(
     `${import.meta.env.VITE_SONG_API}?server=${server}&type=${type}&id=${id}`,
+    { signal: AbortSignal.timeout(12000) },
   );
   const data = await res.json();
 
+  if (!Array.isArray(data) || !data.length || !data[0]?.url) throw new Error("歌单暂不可用");
   if (data[0].url.startsWith("@")) {
     // eslint-disable-next-line no-unused-vars
     const [handle, jsonpCallback, jsonpCallbackFunction, url] = data[0].url.split("@").slice(1);
@@ -45,7 +47,7 @@ export const getPlayerList = async (server, type, id) => {
 
 // 获取一言数据
 export const getHitokoto = async () => {
-  const res = await fetch("https://v1.hitokoto.cn");
+  const res = await fetch("https://v1.hitokoto.cn", { signal: AbortSignal.timeout(8000) });
   return await res.json();
 };
 
@@ -199,10 +201,22 @@ const windDegToText = (deg) => {
 // 英文风向缩写 → 中文方位（wttr.in 兜底用）
 const windEnToText = (en) => {
   const map = {
-    N: "北", NNE: "东北", NE: "东北", ENE: "东",
-    E: "东", ESE: "东南", SE: "东南", SSE: "南",
-    S: "南", SSW: "西南", SW: "西南", WSW: "西",
-    W: "西", WNW: "西北", NW: "西北", NNW: "北",
+    N: "北",
+    NNE: "东北",
+    NE: "东北",
+    ENE: "东",
+    E: "东",
+    ESE: "东南",
+    SE: "东南",
+    SSE: "南",
+    S: "南",
+    SSW: "西南",
+    SW: "西南",
+    WSW: "西",
+    W: "西",
+    WNW: "西北",
+    NW: "西北",
+    NNW: "北",
   };
   return map[en] || "无持续";
 };

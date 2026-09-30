@@ -9,7 +9,16 @@
         </div>
 
         <div class="tool-grid">
-          <div class="tool-card" v-for="(tool, index) in tools" :key="index" @click="openTool(tool)">
+          <div
+            class="tool-card"
+            role="button"
+            tabindex="0"
+            @keydown.enter="openTool(tool)"
+            @keydown.space.prevent="openTool(tool)"
+            v-for="(tool, index) in tools"
+            :key="index"
+            @click="openTool(tool)"
+          >
             <div class="icon-wrapper" :style="{ background: tool.color }">
               <Icon size="24" color="#fff">
                 <component :is="tool.icon" />
@@ -40,7 +49,7 @@
 </template>
 
 <script setup>
-import { ref, markRaw } from 'vue';
+import { ref, markRaw } from "vue";
 import { Icon } from "@vicons/utils";
 import { Calculator, Clock, Ruler, Terminal, ArrowLeft } from "@vicons/fa";
 import CalculatorTool from "./tools/Calculator.vue";
@@ -51,10 +60,34 @@ import TerminalCommandsTool from "./tools/TerminalCommands.vue";
 const currentTool = ref(null);
 
 const tools = [
-  { name: "计算器", desc: "简单的数值计算", icon: Calculator, color: "#409eff", component: markRaw(CalculatorTool) },
-  { name: "单位换算", desc: "长度、重量、温度", icon: Ruler, color: "#67c23a", component: markRaw(UnitConverterTool) },
-  { name: "世界时间", desc: "查看各地时间", icon: Clock, color: "#e6a23c", component: markRaw(WorldTimeTool) },
-  { name: "终端命令", desc: "常用Linux命令速查", icon: Terminal, color: "#909399", component: markRaw(TerminalCommandsTool) },
+  {
+    name: "计算器",
+    desc: "简单的数值计算",
+    icon: Calculator,
+    color: "#409eff",
+    component: markRaw(CalculatorTool),
+  },
+  {
+    name: "单位换算",
+    desc: "长度、重量、温度",
+    icon: Ruler,
+    color: "#67c23a",
+    component: markRaw(UnitConverterTool),
+  },
+  {
+    name: "世界时间",
+    desc: "查看各地时间",
+    icon: Clock,
+    color: "#e6a23c",
+    component: markRaw(WorldTimeTool),
+  },
+  {
+    name: "终端命令",
+    desc: "常用Linux命令速查",
+    icon: Terminal,
+    color: "#909399",
+    component: markRaw(TerminalCommandsTool),
+  },
 ];
 
 const openTool = (tool) => {
@@ -72,13 +105,21 @@ const openTool = (tool) => {
   .tools-home {
     height: 100%;
     overflow-y: auto;
-    &::-webkit-scrollbar { display: none; }
+    &::-webkit-scrollbar {
+      display: none;
+    }
   }
 
   .header {
     margin-bottom: 20px;
-    h2 { margin: 0; font-size: 1.8rem; }
-    .subtitle { font-size: 0.9rem; opacity: 0.8; }
+    h2 {
+      margin: 0;
+      font-size: 1.8rem;
+    }
+    .subtitle {
+      font-size: 0.9rem;
+      opacity: 0.8;
+    }
   }
 
   .tool-grid {
@@ -110,8 +151,15 @@ const openTool = (tool) => {
       }
 
       .info {
-        h3 { margin: 0 0 5px; font-size: 1.1rem; }
-        p { margin: 0; font-size: 0.85rem; opacity: 0.7; }
+        h3 {
+          margin: 0 0 5px;
+          font-size: 1.1rem;
+        }
+        p {
+          margin: 0;
+          font-size: 0.85rem;
+          opacity: 0.7;
+        }
       }
     }
   }
@@ -120,7 +168,7 @@ const openTool = (tool) => {
     height: 100%;
     display: flex;
     flex-direction: column;
-    
+
     .detail-header {
       display: flex;
       align-items: center;
@@ -128,7 +176,7 @@ const openTool = (tool) => {
       margin-bottom: 15px;
       padding-bottom: 10px;
       border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-      
+
       .back-btn {
         background: transparent;
         border: none;
@@ -140,18 +188,18 @@ const openTool = (tool) => {
         font-size: 1rem;
         padding: 5px 10px;
         border-radius: 4px;
-        
+
         &:hover {
           background: rgba(255, 255, 255, 0.1);
         }
       }
-      
+
       h3 {
         margin: 0;
         font-size: 1.2rem;
       }
     }
-    
+
     .detail-content {
       flex: 1;
       overflow: hidden;

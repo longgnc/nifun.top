@@ -6,15 +6,19 @@
         <span>配对: {{ matches }}/{{ totalPairs }}</span>
         <span>时间: {{ time }}s</span>
       </div>
-      <button class="restart-btn" @click="initGame">🔄 重置</button>
+      <button class="restart-btn" @click="initGame">重新开始</button>
     </div>
 
     <div class="game-board" :class="{ 'game-over': gameOver }">
-      <div
+      <button
         v-for="(card, index) in cards"
         :key="card.id"
         class="card-container"
         :class="{ flipped: card.flipped || card.matched }"
+        :aria-label="
+          card.flipped || card.matched ? card.content : '翻开第 ' + (index + 1) + ' 张卡片'
+        "
+        :disabled="card.matched || isProcessing"
         @click="flipCard(index)"
       >
         <div class="card-inner">
@@ -22,10 +26,10 @@
             <span class="card-content">{{ card.content }}</span>
           </div>
           <div class="card-back">
-            <span>❓</span>
+            <span>✳</span>
           </div>
         </div>
-      </div>
+      </button>
     </div>
 
     <div v-if="gameOver" class="overlay">
@@ -40,9 +44,9 @@
 </template>
 
 <script setup>
-import { ref, onUnmounted } from 'vue';
+import { ref, onUnmounted } from "vue";
 
-const emojis = ['🐶', '🐱', '🐭', '🐹', '🐰', '🦊', '🐻', '🐼', '🐨', '🐯', '🦁', '🐮'];
+const emojis = ["◈", "✳", "◉", "✦", "⌘", "☾", "△", "∞"];
 const cards = ref([]);
 const moves = ref(0);
 const matches = ref(0);
@@ -52,10 +56,12 @@ const timerInterval = ref(null);
 const gameOver = ref(false);
 const isProcessing = ref(false);
 
+let flipTimeout;
 const initGame = () => {
+  clearTimeout(flipTimeout);
   // Stop timer
   if (timerInterval.value) clearInterval(timerInterval.value);
-  
+
   // Reset state
   moves.value = 0;
   matches.value = 0;
@@ -66,7 +72,7 @@ const initGame = () => {
   // Prepare cards
   const selectedEmojis = emojis.slice(0, totalPairs);
   const deck = [...selectedEmojis, ...selectedEmojis];
-  
+
   // Shuffle
   for (let i = deck.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
@@ -77,45 +83,38 @@ const initGame = () => {
     id: index,
     content: emoji,
     flipped: false,
-    matched: false
+    matched: false,
   }));
 
-  // Start timer on first move? Or immediately? Let's do immediately for simplicity
-  timerInterval.value = setInterval(() => {
-    time.value++;
-  }, 1000);
+  timerInterval.value = null;
 };
 
 const flipCard = (index) => {
   const card = cards.value[index];
-  
-  if (
-    gameOver.value || 
-    isProcessing.value || 
-    card.matched || 
-    card.flipped
-  ) return;
 
+  if (gameOver.value || isProcessing.value || card.matched || card.flipped) return;
+
+  if (!timerInterval.value) timerInterval.value = setInterval(() => time.value++, 1000);
   card.flipped = true;
 
-  const flippedCards = cards.value.filter(c => c.flipped && !c.matched);
-  
+  const flippedCards = cards.value.filter((c) => c.flipped && !c.matched);
+
   if (flippedCards.length === 2) {
     moves.value++;
     isProcessing.value = true;
-    
+
     if (flippedCards[0].content === flippedCards[1].content) {
       // Match
-      setTimeout(() => {
-        flippedCards.forEach(c => c.matched = true);
+      flipTimeout = setTimeout(() => {
+        flippedCards.forEach((c) => (c.matched = true));
         matches.value++;
         checkWin();
         isProcessing.value = false;
       }, 500);
     } else {
       // No match
-      setTimeout(() => {
-        flippedCards.forEach(c => c.flipped = false);
+      flipTimeout = setTimeout(() => {
+        flippedCards.forEach((c) => (c.flipped = false));
         isProcessing.value = false;
       }, 1000);
     }
@@ -133,6 +132,7 @@ const checkWin = () => {
 initGame();
 
 onUnmounted(() => {
+  clearTimeout(flipTimeout);
   if (timerInterval.value) clearInterval(timerInterval.value);
 });
 </script>
@@ -153,7 +153,7 @@ onUnmounted(() => {
     width: 100%;
     max-width: 500px;
     margin-bottom: 20px;
-    
+
     .stats {
       display: flex;
       gap: 15px;
@@ -204,7 +204,8 @@ onUnmounted(() => {
         transform-style: preserve-3d;
       }
 
-      .card-front, .card-back {
+      .card-front,
+      .card-back {
         position: absolute;
         width: 100%;
         height: 100%;
@@ -214,7 +215,7 @@ onUnmounted(() => {
         align-items: center;
         border-radius: 8px;
         font-size: 2rem;
-        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
       }
 
       .card-back {
@@ -251,9 +252,16 @@ onUnmounted(() => {
       border-radius: 15px;
       backdrop-filter: blur(10px);
 
-      h2 { margin: 0 0 15px; font-size: 2rem; }
-      p { margin: 5px 0; font-size: 1.2rem; opacity: 0.9; }
-      
+      h2 {
+        margin: 0 0 15px;
+        font-size: 2rem;
+      }
+      p {
+        margin: 5px 0;
+        font-size: 1.2rem;
+        opacity: 0.9;
+      }
+
       .start-btn {
         margin-top: 20px;
         background: #409eff;

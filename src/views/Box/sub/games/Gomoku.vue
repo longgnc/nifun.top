@@ -2,12 +2,17 @@
   <div class="gomoku-game">
     <div class="header">
       <div class="status">
-        当前执子: 
-        <span class="stone-icon" :class="{ black: currentPlayer === 1, white: currentPlayer === 2 }"></span>
-        {{ currentPlayer === 1 ? '黑方' : '白方' }}
+        当前执子:
+        <span
+          class="stone-icon"
+          :class="{ black: currentPlayer === 1, white: currentPlayer === 2 }"
+        ></span>
+        {{ currentPlayer === 1 ? "黑方" : "白方" }}
       </div>
       <div class="actions">
-        <button class="btn undo" @click="undo" :disabled="history.length === 0 || !!winner">悔棋</button>
+        <button class="btn undo" @click="undo" :disabled="history.length === 0 || !!winner">
+          悔棋
+        </button>
         <button class="btn restart" @click="initGame">重置</button>
       </div>
     </div>
@@ -16,34 +21,47 @@
       <div class="board">
         <!-- Grid lines background -->
         <div class="grid-lines">
-          <div v-for="i in 14" :key="`h-${i}`" class="line h-line" :style="{ top: i * cellPercent + '%' }"></div>
-          <div v-for="i in 14" :key="`v-${i}`" class="line v-line" :style="{ left: i * cellPercent + '%' }"></div>
+          <div
+            v-for="i in 14"
+            :key="`h-${i}`"
+            class="line h-line"
+            :style="{ top: i * cellPercent + '%' }"
+          ></div>
+          <div
+            v-for="i in 14"
+            :key="`v-${i}`"
+            class="line v-line"
+            :style="{ left: i * cellPercent + '%' }"
+          ></div>
         </div>
 
         <!-- Clickable intersections -->
         <div class="intersections">
-          <div
+          <button
             v-for="(cell, index) in board"
             :key="index"
             class="intersection"
+            :aria-label="
+              '第 ' + (Math.floor(index / 15) + 1) + ' 行，第 ' + ((index % 15) + 1) + ' 列'
+            "
             @click="makeMove(index)"
           >
             <div
               v-if="cell !== 0"
               class="stone"
-              :class="{ 
-                black: cell === 1, 
+              :class="{
+                black: cell === 1,
                 white: cell === 2,
-                last: index === lastMoveIndex
+                last: index === lastMoveIndex,
               }"
             ></div>
-          </div>
+          </button>
         </div>
       </div>
 
       <div v-if="winner" class="overlay">
         <div class="message">
-          <h2>{{ winner === 1 ? '黑方' : '白方' }} 获胜! 🎉</h2>
+          <h2>{{ winner === 3 ? "棋盘已满，和棋" : (winner === 1 ? "黑方" : "白方") + "获胜" }}</h2>
           <button class="btn start" @click="initGame">再来一局</button>
         </div>
       </div>
@@ -52,7 +70,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref } from "vue";
 
 const SIZE = 15;
 const cellPercent = 100 / (SIZE - 1);
@@ -80,6 +98,8 @@ const makeMove = (index) => {
 
   if (checkWin(index, currentPlayer.value)) {
     winner.value = currentPlayer.value;
+  } else if (history.value.length === SIZE * SIZE) {
+    winner.value = 3;
   } else {
     currentPlayer.value = currentPlayer.value === 1 ? 2 : 1;
   }
@@ -87,11 +107,11 @@ const makeMove = (index) => {
 
 const undo = () => {
   if (history.value.length === 0 || winner.value) return;
-  
+
   const lastIndex = history.value.pop();
   board.value[lastIndex] = 0;
   currentPlayer.value = currentPlayer.value === 1 ? 2 : 1;
-  
+
   if (history.value.length > 0) {
     lastMoveIndex.value = history.value[history.value.length - 1];
   } else {
@@ -103,15 +123,15 @@ const checkWin = (index, player) => {
   const x = index % SIZE;
   const y = Math.floor(index / SIZE);
   const directions = [
-    { dx: 1, dy: 0 },  // Horizontal
-    { dx: 0, dy: 1 },  // Vertical
-    { dx: 1, dy: 1 },  // Diagonal \
-    { dx: 1, dy: -1 }  // Diagonal /
+    { dx: 1, dy: 0 }, // Horizontal
+    { dx: 0, dy: 1 }, // Vertical
+    { dx: 1, dy: 1 }, // Diagonal \
+    { dx: 1, dy: -1 }, // Diagonal /
   ];
 
   for (const { dx, dy } of directions) {
     let count = 1;
-    
+
     // Check forward
     let nx = x + dx;
     let ny = y + dy;
@@ -163,15 +183,20 @@ const checkWin = (index, player) => {
         width: 20px;
         height: 20px;
         border-radius: 50%;
-        &.black { background: black; border: 1px solid #444; }
-        &.white { background: white; }
+        &.black {
+          background: black;
+          border: 1px solid #444;
+        }
+        &.white {
+          background: white;
+        }
       }
     }
 
     .actions {
       display: flex;
       gap: 10px;
-      
+
       .btn {
         padding: 5px 15px;
         border-radius: 15px;
@@ -208,7 +233,7 @@ const checkWin = (index, player) => {
       position: relative;
       width: 100%;
       height: 100%;
-      
+
       .grid-lines {
         position: absolute;
         top: 0;
@@ -220,13 +245,13 @@ const checkWin = (index, player) => {
         .line {
           position: absolute;
           background: #333;
-          
+
           &.h-line {
             left: 0;
             right: 0;
             height: 1px;
           }
-          
+
           &.v-line {
             top: 0;
             bottom: 0;
@@ -253,7 +278,7 @@ const checkWin = (index, player) => {
 
           /* Expand hit area */
           &::after {
-            content: '';
+            content: "";
             position: absolute;
             top: -20%;
             left: -20%;
@@ -265,19 +290,19 @@ const checkWin = (index, player) => {
             width: 80%;
             height: 80%;
             border-radius: 50%;
-            box-shadow: 2px 2px 2px rgba(0,0,0,0.3);
+            box-shadow: 2px 2px 2px rgba(0, 0, 0, 0.3);
             position: relative;
 
             &.black {
               background: radial-gradient(circle at 30% 30%, #666, #000);
             }
-            
+
             &.white {
               background: radial-gradient(circle at 30% 30%, #fff, #ddd);
             }
-            
+
             &.last::after {
-              content: '';
+              content: "";
               position: absolute;
               top: 50%;
               left: 50%;
@@ -307,7 +332,7 @@ const checkWin = (index, player) => {
 
       .message {
         text-align: center;
-        
+
         h2 {
           margin-bottom: 20px;
           font-size: 1.8rem;
@@ -321,7 +346,7 @@ const checkWin = (index, player) => {
           color: white;
           font-size: 1.1rem;
           cursor: pointer;
-          
+
           &:hover {
             transform: scale(1.05);
           }

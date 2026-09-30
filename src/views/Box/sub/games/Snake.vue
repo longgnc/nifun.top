@@ -5,11 +5,11 @@
         <div class="score">得分: {{ score }}</div>
         <div class="best">最高: {{ bestScore }}</div>
       </div>
-      <button class="restart-btn" @click="initGame">🔄 重置</button>
+      <button class="restart-btn" @click="initGame">重新开始</button>
     </div>
 
     <div class="game-container" ref="gameContainer">
-      <div class="grid-board" :style="{ width: boardSize + 'px', height: boardSize + 'px' }">
+      <div class="grid-board">
         <!-- Snake -->
         <div
           v-for="(segment, index) in snake"
@@ -18,32 +18,35 @@
           :class="{ head: index === 0 }"
           :style="getSegmentStyle(segment)"
         ></div>
-        
+
         <!-- Food -->
-        <div class="food" :style="getSegmentStyle(food)">🍎</div>
+        <div class="food" :style="getSegmentStyle(food)">●</div>
       </div>
-      
+
       <div v-if="gameOver || !isPlaying" class="overlay">
         <div class="message">
           <h2 v-if="gameOver">游戏结束!</h2>
-          <h2 v-else>贪吃蛇</h2>
+          <h2 v-else>{{ gameLoop ? "已暂停" : "贪吃蛇" }}</h2>
           <p v-if="gameOver">最终得分: {{ score }}</p>
-          <button class="start-btn" @click="startGame">
-            {{ gameOver ? '再玩一次' : '开始游戏' }}
+          <button class="start-btn" @click="gameLoop && !gameOver ? togglePause() : startGame()">
+            {{ gameOver ? "再玩一次" : gameLoop ? "继续游戏" : "开始游戏" }}
           </button>
         </div>
       </div>
     </div>
 
     <div class="controls">
+      <button class="restart-btn" @click="togglePause" :disabled="gameOver || !gameLoop">
+        {{ isPlaying ? "暂停" : "继续" }}
+      </button>
       <div class="d-pad">
         <div class="row">
-          <button class="ctrl-btn up" @click="changeDirection('up')">⬆️</button>
+          <button class="ctrl-btn up" @click="changeDirection('up')">↑</button>
         </div>
         <div class="row">
-          <button class="ctrl-btn left" @click="changeDirection('left')">⬅️</button>
-          <button class="ctrl-btn down" @click="changeDirection('down')">⬇️</button>
-          <button class="ctrl-btn right" @click="changeDirection('right')">➡️</button>
+          <button class="ctrl-btn left" @click="changeDirection('left')">←</button>
+          <button class="ctrl-btn down" @click="changeDirection('down')">↓</button>
+          <button class="ctrl-btn right" @click="changeDirection('right')">→</button>
         </div>
       </div>
     </div>
@@ -51,17 +54,15 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, onMounted, onUnmounted } from "vue";
 
-const gridSize = 20; // Size of one cell in px
 const tileCount = 15; // Number of tiles per row/col
-const boardSize = gridSize * tileCount;
 
 const snake = ref([]);
 const food = ref({ x: 10, y: 10 });
 const velocity = ref({ x: 0, y: 0 });
 const score = ref(0);
-const bestScore = ref(parseInt(localStorage.getItem('snake-best') || 0));
+const bestScore = ref(parseInt(localStorage.getItem("snake-best") || 0));
 const isPlaying = ref(false);
 const gameOver = ref(false);
 const gameLoop = ref(null);
@@ -71,28 +72,25 @@ const initGame = () => {
   snake.value = [
     { x: 10, y: 10 },
     { x: 10, y: 11 },
-    { x: 10, y: 12 }
+    { x: 10, y: 12 },
   ];
   food.value = spawnFood();
   score.value = 0;
   velocity.value = { x: 0, y: -1 };
   gameOver.value = false;
   isPlaying.value = false;
+  turned = false;
   if (gameLoop.value) clearInterval(gameLoop.value);
+  gameLoop.value = null;
 };
 
+let turned = false;
 const spawnFood = () => {
-  let newFood;
-  while (true) {
-    newFood = {
-      x: Math.floor(Math.random() * tileCount),
-      y: Math.floor(Math.random() * tileCount)
-    };
-    // Check if food spawns on snake
-    const onSnake = snake.value.some(s => s.x === newFood.x && s.y === newFood.y);
-    if (!onSnake) break;
-  }
-  return newFood;
+  const empty = [];
+  for (let y = 0; y < tileCount; y++)
+    for (let x = 0; x < tileCount; x++)
+      if (!snake.value.some((s) => s.x === x && s.y === y)) empty.push({ x, y });
+  return empty.length ? empty[Math.floor(Math.random() * empty.length)] : null;
 };
 
 const startGame = () => {
@@ -105,6 +103,7 @@ const startGame = () => {
 const update = () => {
   if (!isPlaying.value || gameOver.value) return;
 
+  turned = false;
   const head = { ...snake.value[0] };
   head.x += velocity.value.x;
   head.y += velocity.value.y;
@@ -116,7 +115,12 @@ const update = () => {
   }
 
   // Self collision
-  if (snake.value.some(s => s.x === head.x && s.y === head.y)) {
+  if (
+    (head.x === food.value.x && head.y === food.value.y
+      ? snake.value
+      : snake.value.slice(0, -1)
+    ).some((s) => s.x === head.x && s.y === head.y)
+  ) {
     endGame();
     return;
   }
@@ -128,9 +132,14 @@ const update = () => {
     score.value += 10;
     if (score.value > bestScore.value) {
       bestScore.value = score.value;
-      localStorage.setItem('snake-best', bestScore.value);
+      localStorage.setItem("snake-best", bestScore.value);
     }
-    food.value = spawnFood();
+    const next = spawnFood();
+    if (!next) {
+      endGame();
+      return;
+    }
+    food.value = next;
     // Optional: Speed up
   } else {
     snake.value.pop();
@@ -143,23 +152,27 @@ const endGame = () => {
   clearInterval(gameLoop.value);
 };
 
+const togglePause = () => {
+  if (!gameOver.value && gameLoop.value) isPlaying.value = !isPlaying.value;
+};
 const changeDirection = (dir) => {
-  if (!isPlaying.value) return;
-  
+  if (!isPlaying.value || turned) return;
+  turned = true;
+
   switch (dir) {
-    case 'up':
+    case "up":
       if (velocity.value.y === 1) return;
       velocity.value = { x: 0, y: -1 };
       break;
-    case 'down':
+    case "down":
       if (velocity.value.y === -1) return;
       velocity.value = { x: 0, y: 1 };
       break;
-    case 'left':
+    case "left":
       if (velocity.value.x === 1) return;
       velocity.value = { x: -1, y: 0 };
       break;
-    case 'right':
+    case "right":
       if (velocity.value.x === -1) return;
       velocity.value = { x: 1, y: 0 };
       break;
@@ -167,30 +180,44 @@ const changeDirection = (dir) => {
 };
 
 const handleKeydown = (e) => {
+  if (e.target.closest("input,textarea,dialog")) return;
+  if (e.key.startsWith("Arrow")) e.preventDefault();
+  if (e.code === "Space") {
+    e.preventDefault();
+    togglePause();
+  }
   switch (e.key) {
-    case 'ArrowUp': changeDirection('up'); break;
-    case 'ArrowDown': changeDirection('down'); break;
-    case 'ArrowLeft': changeDirection('left'); break;
-    case 'ArrowRight': changeDirection('right'); break;
+    case "ArrowUp":
+      changeDirection("up");
+      break;
+    case "ArrowDown":
+      changeDirection("down");
+      break;
+    case "ArrowLeft":
+      changeDirection("left");
+      break;
+    case "ArrowRight":
+      changeDirection("right");
+      break;
   }
 };
 
 const getSegmentStyle = (segment) => {
   return {
-    left: segment.x * gridSize + 'px',
-    top: segment.y * gridSize + 'px',
-    width: (gridSize - 2) + 'px',
-    height: (gridSize - 2) + 'px'
+    left: (segment.x / tileCount) * 100 + "%",
+    top: (segment.y / tileCount) * 100 + "%",
+    width: "6%",
+    height: "6%",
   };
 };
 
 onMounted(() => {
-  window.addEventListener('keydown', handleKeydown);
+  window.addEventListener("keydown", handleKeydown);
   initGame();
 });
 
 onUnmounted(() => {
-  window.removeEventListener('keydown', handleKeydown);
+  window.removeEventListener("keydown", handleKeydown);
   if (gameLoop.value) clearInterval(gameLoop.value);
 });
 </script>
@@ -244,13 +271,13 @@ onUnmounted(() => {
     .grid-board {
       position: relative;
       background: rgba(255, 255, 255, 0.05);
-      
+
       .snake-segment {
         position: absolute;
         background: #67c23a;
         border-radius: 4px;
         transition: all 0.1s linear;
-        
+
         &.head {
           background: #85ce61;
           z-index: 10;
@@ -280,9 +307,15 @@ onUnmounted(() => {
 
       .message {
         text-align: center;
-        h2 { margin: 0 0 10px; font-size: 2rem; }
-        p { margin: 0 0 20px; font-size: 1.2rem; }
-        
+        h2 {
+          margin: 0 0 10px;
+          font-size: 2rem;
+        }
+        p {
+          margin: 0 0 20px;
+          font-size: 1.2rem;
+        }
+
         .start-btn {
           background: #67c23a;
           border: none;
@@ -297,7 +330,7 @@ onUnmounted(() => {
           &:hover {
             transform: scale(1.05);
           }
-          
+
           &:active {
             transform: scale(0.95);
           }
@@ -308,7 +341,7 @@ onUnmounted(() => {
 
   .controls {
     margin-top: 20px;
-    
+
     .d-pad {
       display: flex;
       flex-direction: column;

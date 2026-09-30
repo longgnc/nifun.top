@@ -3,15 +3,15 @@
     <div class="game-header">
       <div class="scores">
         <div class="score-box">
-          <span class="label">SCORE</span>
+          <span class="label">得分</span>
           <span class="value">{{ score }}</span>
         </div>
         <div class="score-box">
-          <span class="label">BEST</span>
+          <span class="label">最佳</span>
           <span class="value">{{ bestScore }}</span>
         </div>
       </div>
-      <button class="restart-btn" @click="initGame">New Game</button>
+      <button class="restart-btn" @click="initGame">重新开始</button>
     </div>
 
     <div class="game-container" @touchstart="handleTouchStart" @touchend="handleTouchEnd">
@@ -22,28 +22,32 @@
         <div
           v-for="tile in tiles"
           :key="tile.id"
-          :class="['tile', `tile-${tile.value}`, `position-${tile.x}-${tile.y}`, { 'tile-new': tile.isNew, 'tile-merged': tile.isMerged }]"
+          :style="{ left: 2.5 + tile.x * 24.375 + '%', top: 2.5 + tile.y * 24.375 + '%' }"
+          :class="[
+            'tile',
+            `tile-${tile.value}`,
+            `position-${tile.x}-${tile.y}`,
+            { 'tile-new': tile.isNew, 'tile-merged': tile.isMerged },
+          ]"
         >
           <div class="tile-inner">{{ tile.value }}</div>
         </div>
       </div>
       <div v-if="gameOver" class="game-message game-over">
-        <p>Game Over!</p>
-        <button @click="initGame">Try Again</button>
+        <p>本局结束</p>
+        <button @click="initGame">再来一局</button>
       </div>
       <div v-if="gameWon" class="game-message game-won">
-        <p>You Win!</p>
-        <button @click="keepPlaying">Keep Going</button>
+        <p>达成 2048</p>
+        <button @click="keepPlaying">继续挑战</button>
       </div>
     </div>
-    <div class="instructions">
-      使用方向键或滑动屏幕移动方块
-    </div>
+    <div class="instructions">使用方向键或滑动屏幕移动方块</div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, onMounted, onUnmounted } from "vue";
 
 const score = ref(0);
 const bestScore = ref(0);
@@ -64,9 +68,9 @@ const initGame = () => {
   hasWon.value = false;
   addRandomTile();
   addRandomTile();
-  
+
   // Load best score
-  const savedBest = localStorage.getItem('2048-best');
+  const savedBest = localStorage.getItem("2048-best");
   if (savedBest) bestScore.value = parseInt(savedBest);
 };
 
@@ -74,7 +78,7 @@ const addRandomTile = () => {
   const emptyCells = [];
   for (let x = 0; x < 4; x++) {
     for (let y = 0; y < 4; y++) {
-      if (!tiles.value.find(t => t.x === x && t.y === y)) {
+      if (!tiles.value.find((t) => t.x === x && t.y === y)) {
         emptyCells.push({ x, y });
       }
     }
@@ -88,26 +92,26 @@ const addRandomTile = () => {
       y: randomCell.y,
       value: Math.random() < 0.9 ? 2 : 4,
       isNew: true,
-      isMerged: false
+      isMerged: false,
     });
   }
 };
 
-const getTileAt = (x, y) => tiles.value.find(t => t.x === x && t.y === y);
+const getTileAt = (x, y) => tiles.value.find((t) => t.x === x && t.y === y);
 
 const move = (direction) => {
-  if (gameOver.value) return;
+  if (gameOver.value || gameWon.value) return;
 
   let moved = false;
   const vector = getVector(direction);
   const traversals = buildTraversals(vector);
-  
-  // Reset merge flags
-  tiles.value.forEach(t => t.isMerged = false);
-  tiles.value.forEach(t => t.isNew = false);
 
-  traversals.x.forEach(x => {
-    traversals.y.forEach(y => {
+  // Reset merge flags
+  tiles.value.forEach((t) => (t.isMerged = false));
+  tiles.value.forEach((t) => (t.isNew = false));
+
+  traversals.x.forEach((x) => {
+    traversals.y.forEach((y) => {
       const tile = getTileAt(x, y);
       if (tile) {
         const positions = findFarthestPosition({ x, y }, vector);
@@ -116,10 +120,10 @@ const move = (direction) => {
         if (next && next.value === tile.value && !next.isMerged) {
           // Merge
           const mergedValue = tile.value * 2;
-          
+
           // Remove old tiles
-          tiles.value = tiles.value.filter(t => t.id !== tile.id && t.id !== next.id);
-          
+          tiles.value = tiles.value.filter((t) => t.id !== tile.id && t.id !== next.id);
+
           // Add merged tile
           tiles.value.push({
             id: tileIdCounter++,
@@ -127,13 +131,13 @@ const move = (direction) => {
             y: positions.next.y,
             value: mergedValue,
             isNew: false,
-            isMerged: true
+            isMerged: true,
           });
 
           score.value += mergedValue;
           if (score.value > bestScore.value) {
             bestScore.value = score.value;
-            localStorage.setItem('2048-best', bestScore.value);
+            localStorage.setItem("2048-best", bestScore.value);
           }
 
           if (mergedValue === 2048 && !hasWon.value) {
@@ -163,9 +167,9 @@ const move = (direction) => {
 const getVector = (direction) => {
   const map = {
     0: { x: 0, y: -1 }, // Up
-    1: { x: 1, y: 0 },  // Right
-    2: { x: 0, y: 1 },  // Down
-    3: { x: -1, y: 0 }  // Left
+    1: { x: 1, y: 0 }, // Right
+    2: { x: 0, y: 1 }, // Down
+    3: { x: -1, y: 0 }, // Left
   };
   return map[direction];
 };
@@ -192,7 +196,7 @@ const findFarthestPosition = (cell, vector) => {
 
   return {
     farthest: previous,
-    next: cell
+    next: cell,
   };
 };
 
@@ -201,28 +205,14 @@ const withinBounds = (position) => {
 };
 
 const movesAvailable = () => {
-  return !!tiles.value.find(t => { // empty cell check is implicit if we can find a null spot, but tiles list only has tiles. 
-    // Wait, simpler: check if board is full
-    if (tiles.value.length < 16) return true;
-    
-    // Check matches
-    for (let x = 0; x < 4; x++) {
-      for (let y = 0; y < 4; y++) {
-        const tile = getTileAt(x, y);
-        if (tile) {
-          for (let direction = 0; direction < 4; direction++) {
-            const vector = getVector(direction);
-            const cell = { x: x + vector.x, y: y + vector.y };
-            const other = getTileAt(cell.x, cell.y);
-            if (other && other.value === tile.value) {
-              return true;
-            }
-          }
-        }
-      }
-    }
-    return false;
-  });
+  if (tiles.value.length < 16) return true;
+  return tiles.value.some((tile) =>
+    [0, 1, 2, 3].some((direction) => {
+      const vector = getVector(direction);
+      const other = getTileAt(tile.x + vector.x, tile.y + vector.y);
+      return other && other.value === tile.value;
+    }),
+  );
 };
 
 const keepPlaying = () => {
@@ -232,6 +222,7 @@ const keepPlaying = () => {
 
 // Input handling
 const handleKeydown = (e) => {
+  if (e.target.closest("input,textarea,dialog")) return;
   const map = {
     38: 0, // Up
     39: 1, // Right
@@ -240,9 +231,9 @@ const handleKeydown = (e) => {
     87: 0, // W
     68: 1, // D
     83: 2, // S
-    65: 3  // A
+    65: 3, // A
   };
-  
+
   if (map[e.keyCode] !== undefined) {
     e.preventDefault();
     move(map[e.keyCode]);
@@ -259,10 +250,10 @@ const handleTouchEnd = (e) => {
   if (e.changedTouches.length > 0) {
     const endX = e.changedTouches[0].clientX;
     const endY = e.changedTouches[0].clientY;
-    
+
     const diffX = endX - startX;
     const diffY = endY - startY;
-    
+
     if (Math.abs(diffX) > Math.abs(diffY)) {
       if (Math.abs(diffX) > 30) {
         move(diffX > 0 ? 1 : 3);
@@ -277,11 +268,11 @@ const handleTouchEnd = (e) => {
 
 onMounted(() => {
   initGame();
-  window.addEventListener('keydown', handleKeydown);
+  window.addEventListener("keydown", handleKeydown);
 });
 
 onUnmounted(() => {
-  window.removeEventListener('keydown', handleKeydown);
+  window.removeEventListener("keydown", handleKeydown);
 });
 </script>
 
@@ -294,18 +285,18 @@ onUnmounted(() => {
   width: 100%;
   height: 100%;
   font-family: "Clear Sans", "Helvetica Neue", Arial, sans-serif;
-  
+
   .game-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     width: 280px;
     margin-bottom: 20px;
-    
+
     .scores {
       display: flex;
       gap: 10px;
-      
+
       .score-box {
         background: #bbada0;
         padding: 5px 15px;
@@ -315,20 +306,20 @@ onUnmounted(() => {
         align-items: center;
         color: white;
         min-width: 60px;
-        
+
         .label {
           font-size: 10px;
           color: #eee4da;
           font-weight: bold;
         }
-        
+
         .value {
           font-size: 18px;
           font-weight: bold;
         }
       }
     }
-    
+
     .restart-btn {
       background: #8f7a66;
       color: white;
@@ -338,13 +329,13 @@ onUnmounted(() => {
       font-weight: bold;
       cursor: pointer;
       outline: none;
-      
+
       &:hover {
         background: #7f6a56;
       }
     }
   }
-  
+
   .game-container {
     position: relative;
     width: 280px;
@@ -354,7 +345,7 @@ onUnmounted(() => {
     padding: 10px;
     box-sizing: border-box;
     touch-action: none;
-    
+
     .grid-container {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
@@ -362,7 +353,7 @@ onUnmounted(() => {
       gap: 10px;
       width: 100%;
       height: 100%;
-      
+
       .grid-cell {
         background: rgba(238, 228, 218, 0.35);
         border-radius: 3px;
@@ -370,7 +361,7 @@ onUnmounted(() => {
         height: 100%;
       }
     }
-    
+
     .tile-container {
       position: absolute;
       top: 0;
@@ -379,14 +370,14 @@ onUnmounted(() => {
       bottom: 0;
       padding: 10px;
       z-index: 2;
-      
+
       .tile {
         position: absolute;
         width: 57.5px; // (280 - 20 - 30) / 4
         height: 57.5px;
         border-radius: 3px;
         transition: transform 0.1s ease-in-out;
-        
+
         .tile-inner {
           width: 100%;
           height: 100%;
@@ -398,30 +389,66 @@ onUnmounted(() => {
           color: #776e65;
           border-radius: 3px;
         }
-        
+
         &.tile-new {
           animation: appear 0.2s ease;
         }
-        
+
         &.tile-merged {
           animation: pop 0.2s ease;
         }
-        
+
         // Tile colors
-        &.tile-2 .tile-inner { background: #eee4da; }
-        &.tile-4 .tile-inner { background: #ede0c8; }
-        &.tile-8 .tile-inner { background: #f2b179; color: #f9f6f2; }
-        &.tile-16 .tile-inner { background: #f59563; color: #f9f6f2; }
-        &.tile-32 .tile-inner { background: #f67c5f; color: #f9f6f2; }
-        &.tile-64 .tile-inner { background: #f65e3b; color: #f9f6f2; }
-        &.tile-128 .tile-inner { background: #edcf72; color: #f9f6f2; font-size: 24px; }
-        &.tile-256 .tile-inner { background: #edcc61; color: #f9f6f2; font-size: 24px; }
-        &.tile-512 .tile-inner { background: #edc850; color: #f9f6f2; font-size: 24px; }
-        &.tile-1024 .tile-inner { background: #edc53f; color: #f9f6f2; font-size: 18px; }
-        &.tile-2048 .tile-inner { background: #edc22e; color: #f9f6f2; font-size: 18px; }
+        &.tile-2 .tile-inner {
+          background: #eee4da;
+        }
+        &.tile-4 .tile-inner {
+          background: #ede0c8;
+        }
+        &.tile-8 .tile-inner {
+          background: #f2b179;
+          color: #f9f6f2;
+        }
+        &.tile-16 .tile-inner {
+          background: #f59563;
+          color: #f9f6f2;
+        }
+        &.tile-32 .tile-inner {
+          background: #f67c5f;
+          color: #f9f6f2;
+        }
+        &.tile-64 .tile-inner {
+          background: #f65e3b;
+          color: #f9f6f2;
+        }
+        &.tile-128 .tile-inner {
+          background: #edcf72;
+          color: #f9f6f2;
+          font-size: 24px;
+        }
+        &.tile-256 .tile-inner {
+          background: #edcc61;
+          color: #f9f6f2;
+          font-size: 24px;
+        }
+        &.tile-512 .tile-inner {
+          background: #edc850;
+          color: #f9f6f2;
+          font-size: 24px;
+        }
+        &.tile-1024 .tile-inner {
+          background: #edc53f;
+          color: #f9f6f2;
+          font-size: 18px;
+        }
+        &.tile-2048 .tile-inner {
+          background: #edc22e;
+          color: #f9f6f2;
+          font-size: 18px;
+        }
       }
     }
-    
+
     .game-message {
       position: absolute;
       top: 0;
@@ -436,14 +463,14 @@ onUnmounted(() => {
       justify-content: center;
       text-align: center;
       animation: fade-in 0.8s;
-      
+
       p {
         font-size: 40px;
         font-weight: bold;
         color: #776e65;
         margin-bottom: 20px;
       }
-      
+
       button {
         background: #8f7a66;
         color: white;
@@ -455,7 +482,7 @@ onUnmounted(() => {
       }
     }
   }
-  
+
   .instructions {
     margin-top: 20px;
     color: #ffffffaa;
@@ -473,13 +500,25 @@ onUnmounted(() => {
 }
 
 @keyframes appear {
-  0% { opacity: 0; transform: scale(0); }
-  100% { opacity: 1; transform: scale(1); }
+  0% {
+    opacity: 0;
+    transform: scale(0);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 @keyframes pop {
-  0% { transform: scale(0); }
-  50% { transform: scale(1.2); }
-  100% { transform: scale(1); }
+  0% {
+    transform: scale(0);
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+  }
 }
 </style>

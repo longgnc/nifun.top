@@ -13,16 +13,16 @@
     <span class="sm-hidden">{{ weatherData.weather.windpower }}&nbsp;级</span>
   </div>
   <div class="weather" v-else>
-    <span>天气数据获取失败</span>
+    <span>{{ loading ? "正在感知天气…" : "天气暂不可用 · 愿你心情晴朗" }}</span>
   </div>
 </template>
 
 <script setup>
 import { getAdcode, getWeather, getOtherWeather } from "@/api";
-import { Error } from "@icon-park/vue-next";
 
 // 高德开发者 Key
 const mainKey = import.meta.env.VITE_WEATHER_KEY;
+const loading = ref(true);
 
 // 天气数据
 const weatherData = reactive({
@@ -37,18 +37,6 @@ const weatherData = reactive({
     windpower: null, // 风力级别
   },
 });
-
-// 取出天气平均值
-const getTemperature = (min, max) => {
-  try {
-    // 计算平均值并四舍五入
-    const average = (Number(min) + Number(max)) / 2;
-    return Math.round(average);
-  } catch (error) {
-    console.error("计算温度出现错误：", error);
-    return "NaN";
-  }
-};
 
 // 获取天气数据
 const getWeatherData = async () => {
@@ -89,20 +77,9 @@ const getWeatherData = async () => {
     }
   } catch (error) {
     console.error("天气信息获取失败:" + error);
-    onError("天气信息获取失败");
+  } finally {
+    loading.value = false;
   }
-};
-
-// 报错信息
-const onError = (message) => {
-  ElMessage({
-    message,
-    icon: h(Error, {
-      theme: "filled",
-      fill: "#efefef",
-    }),
-  });
-  console.error(message);
 };
 
 onMounted(() => {

@@ -7,7 +7,15 @@
       </div>
 
       <div class="game-showcase">
-        <div class="featured-game" @click="playGame('2048')">
+        <div
+          class="featured-game"
+          role="button"
+          tabindex="0"
+          aria-label="开始 2048"
+          @keydown.enter="playGame('2048')"
+          @keydown.space.prevent="playGame('2048')"
+          @click="playGame('2048')"
+        >
           <div class="game-banner">2048</div>
           <div class="game-info">
             <h3>2048</h3>
@@ -17,7 +25,16 @@
       </div>
 
       <div class="game-list">
-        <div class="game-card" v-for="(game, index) in games" :key="index" @click="playGame(game.id)">
+        <div
+          class="game-card"
+          role="button"
+          tabindex="0"
+          @keydown.enter="playGame(game.id)"
+          @keydown.space.prevent="playGame(game.id)"
+          v-for="(game, index) in games"
+          :key="index"
+          @click="playGame(game.id)"
+        >
           <div class="card-bg" :style="{ background: game.color }">
             <Icon size="32" color="#fff">
               <component :is="game.icon" />
@@ -43,23 +60,23 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref } from "vue";
 import { Icon } from "@vicons/utils";
 import { Gamepad, Dice, Chess, Trophy, ArrowLeft } from "@vicons/fa";
-import Game2048 from './games/Game2048.vue';
-import Minesweeper from './games/Minesweeper.vue';
-import Snake from './games/Snake.vue';
-import Gomoku from './games/Gomoku.vue';
-import Card from './games/Card.vue';
+import Game2048 from "./games/Game2048.vue";
+import Minesweeper from "./games/Minesweeper.vue";
+import Snake from "./games/Snake.vue";
+import Gomoku from "./games/Gomoku.vue";
+import Card from "./games/Card.vue";
 
 const activeGame = ref(null);
 
 const gameComponents = {
-  '2048': Game2048,
-  'minesweeper': Minesweeper,
-  'snake': Snake,
-  'gomoku': Gomoku,
-  'card': Card
+  2048: Game2048,
+  minesweeper: Minesweeper,
+  snake: Snake,
+  gomoku: Gomoku,
+  card: Card,
 };
 
 const games = [
@@ -74,9 +91,9 @@ const playGame = (id) => {
 };
 
 const getGameName = (id) => {
-  if (id === '2048') return '2048';
-  const game = games.find(g => g.id === id);
-  return game ? game.name : '';
+  if (id === "2048") return "2048";
+  const game = games.find((g) => g.id === id);
+  return game ? game.name : "";
 };
 </script>
 
@@ -86,7 +103,7 @@ const getGameName = (id) => {
   height: 100%;
   overflow-y: auto;
   padding: 0 10px;
-  
+
   /* Hide scrollbar for cleaner look */
   &::-webkit-scrollbar {
     display: none;
@@ -130,13 +147,19 @@ const getGameName = (id) => {
         font-size: 2rem;
         font-weight: bold;
         color: white;
-        text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
       }
 
       .game-info {
         padding: 15px;
-        h3 { margin: 0 0 5px; }
-        p { margin: 0; font-size: 0.9rem; opacity: 0.7; }
+        h3 {
+          margin: 0 0 5px;
+        }
+        p {
+          margin: 0;
+          font-size: 0.9rem;
+          opacity: 0.7;
+        }
       }
     }
   }
@@ -225,12 +248,22 @@ const getGameName = (id) => {
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes slideIn {
-  from { transform: translateX(20px); opacity: 0; }
-  to { transform: translateX(0); opacity: 1; }
+  from {
+    transform: translateX(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
 }
 </style>
